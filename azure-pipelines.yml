@@ -35,6 +35,6 @@ stages:
         downloadPath: '$(System.ArtifactsDirectory)'
     - task: AzureWebApp@1  # Deploy to Azure App Service
       inputs:
-        azureSubscription: '<your-service-connection-name>'
-        appName: '<your-app-name>'
+        azureSubscription: 'Azure-devops-rpp-testing'
+        appName: 'Devops-Testing-app'
         package: '$(System.ArtifactsDirectory)/drop'
