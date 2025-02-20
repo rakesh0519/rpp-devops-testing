@@ -55,6 +55,10 @@ stages:
         azureSubscription: 'Azure-devops-rpp-testing'  # Replace with your service connection
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
-        inlineScript: |
-          echo "Deploying application..."
-          # Add your Azure deployment command here
+- task: AzureCLI@2
+  inputs:
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az login --service-principal -u "d683c8ed-8d16-4154-8a0e-46fadb1717bf" -p "3a919ff2-487c-4d5c-a190-6be2aa974dab" --tenant "48b4641a-04b1-4c42-95c9-757110f1641a"
+
