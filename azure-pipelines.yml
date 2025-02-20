@@ -1,40 +1,60 @@
 trigger:
   branches:
     include:
-      - main  # Runs pipeline when code is pushed to 'main'
+      - main  # Trigger pipeline when changes are pushed to 'main' branch
+
+pool:
+  vmImage: 'ubuntu-latest'  # Use Microsoft-hosted agent
 
 stages:
 - stage: Build
   jobs:
   - job: BuildJob
-    pool:
-      vmImage: 'ubuntu-latest'  # Use a Microsoft-hosted agent
+    displayName: 'Build and Test'
     steps:
-    - checkout: self  # Checkout code from GitHub
-    - task: UseNode@2  # If you're using a Node.js project
+    
+    # ✅ Install Node.js explicitly
+    - task: UseNode@2  
       inputs:
-        version: '16.x'
-    - script: npm install
+        version: '18.x'  # Specify Node.js version
+
+    # ✅ Verify Node.js version
+    - script: |
+        node --version
+        npm --version
+      displayName: 'Check Node.js and NPM Version'
+
+    # ✅ Install dependencies (if package.json exists)
+    - script: |
+        npm install
       displayName: 'Install Dependencies'
-    - script: npm run build
-      displayName: 'Build Application'
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: 'dist'
-        artifactName: 'drop'  # Stores build artifacts for deployment
+
+    # ✅ Run build script (if applicable)
+    - script: |
+        npm run build
+      displayName: 'Run Build Script'
+      condition: succeeded()
+
+    # ✅ Run tests (if applicable)
+    - script: |
+        npm test
+      displayName: 'Run Tests'
+      condition: succeeded()
 
 - stage: Deploy
+  dependsOn: Build
+  condition: succeeded()
   jobs:
   - job: DeployJob
-    pool:
-      vmImage: 'ubuntu-latest'
+    displayName: 'Deploy Application'
     steps:
-    - task: DownloadBuildArtifacts@0
+    
+    # ✅ Log in to Azure using a service connection
+    - task: AzureCLI@2
       inputs:
-        artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    - task: AzureWebApp@1  # Deploy to Azure App Service
-      inputs:
-        azureSubscription: 'Azure-devops-rpp-testing'
-        appName: 'Devops-Testing-app'
-        package: '$(System.ArtifactsDirectory)/drop'
+        azureSubscription: 'Azure-devops-rpp-testing'  # Replace with your service connection
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Deploying application..."
+          # Add your Azure deployment command here
